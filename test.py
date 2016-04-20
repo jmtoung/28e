@@ -1,0 +1,9 @@
+from ebaysdk.trading import Connection as Trading
+
+api = Trading(appid="Jonathan-test-SBX-32f871c7c-d6418e62", devid="a2b89781-8b46-4636-a255-234f161c9a10", certid="SBX-2f871c7cd8a8-226b-4565-841a-ebcf", token="AgAAAA**AQAAAA**aAAAAA**DMkWVw**nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wFk4GgCpKKqQWdj6x9nY+seQ**DsgDAA**AAMAAA**V+sg7g6GT2nGsHqt20Pey0ymjich8ZhFRz9ibBkZXfgO7dM4nHmwUAH17E/ak4hPPKXtgUb+S7wfAD8TQZQ9WVrQb5pWI6leJeyKRTKXisk1PuBGsV4h/W12gSnzVGlWCPW+ztndgNzP3KfuJuDZLI6Ag+ICkDgUqE9A5XVPltQ68ZQ0iK2Wg1+knJkf3JHpjySpbfepEbNPC+M4A5ZAbA/4+dr51DoBsfqqeeP2kE3M3AlfDH6hraX7H/UXRe5NYSLvuul0wdfStPgMoKoqCFb93o78IzW3CPdNwJH0wkihHRGu8j4NoRRrDyMc10Tic8YqU8534zp5rOE2W2Buj3S1j6W1cnxNmR1bce1Z2PPwkpqx3LD3dBlm3yu5KUIAHJLrsvIRE7wmvBcIrXYJK4GQUUUPaR7MFV/zSDhfDP5Ilgyes5GsTyqm9F05ljV7qpM9jMhb6pjcX2GdVMLlajPk2hwUWnxW3hh6UuRswzSxLBv6kXRyD3RwhPaSNiJzdYAXpWHpMUd2X6OAkfnj05wDBNQK4ik8AmuJ01JzMh/6ZDQ1EhEJgYzZ1kVuPz+Jr6Igtp7aRXIOXLaCJE6WFh7gdKC5o0uOF4kPmdSvYTjK6q71fVgkM2T65lyeT2Fq9sW41hXa0zANmUbPpkaHobZjKohWGL8hwxCYvcKSnHubC2fGeGZ2WmYZB8Gu5MjpZVCMALCcPW888HKVsfhiZSzyHjIGNR1x9eIJ839w2q0+sx1Q2zS1W1hN/wppNoWW")
+response = api.execute('GetUser', {})
+print(response.dict())
+print(response.reply)
+    
+    
+# TESTUSER_jmt; pw: F!
