@@ -12,9 +12,8 @@ from firebase import firebase
 class GetAccount:
 
     def __init__(self, firebase_url, invoiceDate = None):
-        self.firebase_url = firebase_url
         self.Trading = Trading()
-        self.firebase = firebase.FirebaseApplication(self.firebase_url, None)
+        self.firebase = firebase.FirebaseApplication(firebase_url, None)
 
     def _parseGetAccount(self, response):
         AccountEntries = response.dict()['AccountEntries']['AccountEntry']
