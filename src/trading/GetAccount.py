@@ -11,15 +11,15 @@ from firebase import firebase
 
 class GetAccount:
 
-    def __init__(self, firebase_url, invoice_date = None):
-        self.firebase = firebase.FirebaseApplication(firebase_url, None)
+    def __init__(self, firebase_url, invoice_date=None):
+        pass
 
-    def get_invoice_by_Date(self, invoice_date):
-
+    def get_invoice_by_Date(self, firebase_url, invoice_date=None):
         if not invoice_date:
             raise Exception('get_invoice_by_invoice_Date requires invoice_date')
 
         trading = Trading()
+        fb = firebase.FirebaseApplication(firebase_url, None)
         page_number = 1
         num_executions = 1
 
@@ -37,7 +37,7 @@ class GetAccount:
                 if num_executions > 10:
                     break
 
-                self._parse_get_account(response)
+                self._parse_get_account(fb, response)
 
                 has_more = response.dict().get('HasMoreEntries') == "true"
                 if has_more:
@@ -48,7 +48,7 @@ class GetAccount:
             except ConnectionError as e:
                 sys.stderr.write(json.dumps(e.response.dict()) + "\n")
 
-    def _parse_get_account(self, response):
+    def _parse_get_account(self, fb, response):
         account_entries = response.dict()['AccountEntries']['AccountEntry']
 
         for entry in account_entries:
@@ -63,9 +63,9 @@ class GetAccount:
                     invoice_date = invoice_date_regex.group(1)
                 else:
                     raise Exception('invoice Date %s does not match' % invoice_date)
-                self.firebase.post('/fees/byInvoiceDate/%s' % invoice_date, entry)
+                fb.post('/fees/byInvoiceDate/%s' % invoice_date, entry)
             else:
-                self.firebase.put('/fees/byRefNumber', ref_number, entry)
+                fb.put('/fees/byRefNumber', ref_number, entry)
 
 
 if __name__ == "__main__":
@@ -75,4 +75,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     getAccount = GetAccount(args.firebase_url, invoice_date=args.invoice_date)
-    getAccount.get_invoice_by_Date('2016-02-29')
+    getAccount.get_invoice_by_Date(args.firebase_url, '2016-02-29')
