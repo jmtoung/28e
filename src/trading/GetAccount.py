@@ -58,11 +58,9 @@ class GetAccount:
 
                 self._parse_get_account(response)
 
-                if 'HasMoreEntries' in response.dict():
-                    if response.dict()['HasMoreEntries'] == "true":
-                        page_number += 1
-                    else:
-                        break
+                has_more = response.dict().get('HasMoreEntries') == "true"
+                if has_more:
+                    page_number += 1
                 else:
                     break
 
