@@ -18,7 +18,7 @@ class GetAccount:
     def _parse_get_account(self, response):
         account_entries = response.dict()['AccountEntries']['AccountEntry']
 
-        for i, entry in enumerate(account_entries):
+        for entry in account_entries:
             print 'Sending account entry {0} to Firebase...'.format(entry.get('ItemID'))
 
             ref_number = entry['RefNumber']
