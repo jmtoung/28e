@@ -12,7 +12,6 @@ from firebase import firebase
 class GetAccount:
 
     def __init__(self, firebase_url, invoice_date = None):
-        self.Trading = Trading()
         self.firebase = firebase.FirebaseApplication(firebase_url, None)
 
     def _parse_get_account(self, response):
@@ -39,13 +38,14 @@ class GetAccount:
         if not invoice_date:
             raise Exception('get_invoice_by_invoice_Date requires invoice_date')
 
+        trading = Trading()
         page_number = 1
         num_executions = 1
 
         while True:
             print 'Getting account for date %s' % invoice_date
             try:
-                response = self.Trading.execute('GetAccount', {
+                response = trading.execute('GetAccount', {
                     'AccountHistorySelection': 'SpecifiedInvoice',
                     'InvoiceDate': '%sT06:59:59.000Z' % invoice_date,
                     'Pagination': { 'EntriesPerPage': '1000', 'PageNumber': str(page_number) }
