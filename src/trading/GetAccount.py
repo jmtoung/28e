@@ -19,6 +19,8 @@ class GetAccount:
         AccountEntries = response.dict()['AccountEntries']['AccountEntry']
 
         for i, AccountEntry in enumerate(AccountEntries):
+            print 'Sending account entry {0} to Firebase...'.format(AccountEntry.get('ItemID'))
+
             refNumber = AccountEntry['RefNumber']
             # if refNumber is 0, it's not associated with an item
             if refNumber == '0':
@@ -41,13 +43,14 @@ class GetAccount:
         NumExecutions = 1
 
         while True:
+            print 'Getting account for date %s' % invoiceDate
             try:
                 response = self.Trading.execute('GetAccount', {
                     'AccountHistorySelection': 'SpecifiedInvoice',
                     'InvoiceDate': '%sT06:59:59.000Z' % invoiceDate,
                     'Pagination': { 'EntriesPerPage': '1000', 'PageNumber': str(PageNumber) }
                 })
-                print str(PageNumber)
+
                 # safety measure to make sure we dont have an infinite loop
                 NumExecutions += 1
                 if NumExecutions > 10:
