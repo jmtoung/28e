@@ -14,25 +14,6 @@ class GetAccount:
     def __init__(self, firebase_url, invoice_date = None):
         self.firebase = firebase.FirebaseApplication(firebase_url, None)
 
-    def _parse_get_account(self, response):
-        account_entries = response.dict()['AccountEntries']['AccountEntry']
-
-        for entry in account_entries:
-            print 'Sending account entry {0} to Firebase...'.format(entry.get('ItemID'))
-
-            ref_number = entry['RefNumber']
-            # if ref_number is 0, it's not associated with an item
-            if ref_number == '0':
-                invoice_date = response.dict()['AccountSummary']['InvoiceDate']
-                invoice_date_regex = re.match('^([0-9]{4}-[0-9]{2}-[0-9]{2})T', invoice_date)
-                if invoice_date_regex:
-                    invoice_date = invoice_date_regex.group(1)
-                else:
-                    raise Exception('invoice Date %s does not match' % invoice_date)
-                self.firebase.post('/fees/byInvoiceDate/%s' % invoice_date, entry)
-            else:
-                self.firebase.put('/fees/byRefNumber', ref_number, entry)
-
     def get_invoice_by_Date(self, invoice_date):
 
         if not invoice_date:
@@ -66,6 +47,25 @@ class GetAccount:
 
             except ConnectionError as e:
                 sys.stderr.write(json.dumps(e.response.dict()) + "\n")
+
+    def _parse_get_account(self, response):
+        account_entries = response.dict()['AccountEntries']['AccountEntry']
+
+        for entry in account_entries:
+            print 'Sending account entry {0} to Firebase...'.format(entry.get('ItemID'))
+
+            ref_number = entry['RefNumber']
+            # if ref_number is 0, it's not associated with an item
+            if ref_number == '0':
+                invoice_date = response.dict()['AccountSummary']['InvoiceDate']
+                invoice_date_regex = re.match('^([0-9]{4}-[0-9]{2}-[0-9]{2})T', invoice_date)
+                if invoice_date_regex:
+                    invoice_date = invoice_date_regex.group(1)
+                else:
+                    raise Exception('invoice Date %s does not match' % invoice_date)
+                self.firebase.post('/fees/byInvoiceDate/%s' % invoice_date, entry)
+            else:
+                self.firebase.put('/fees/byRefNumber', ref_number, entry)
 
 
 if __name__ == "__main__":
