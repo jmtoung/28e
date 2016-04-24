@@ -11,56 +11,56 @@ from firebase import firebase
 
 class GetAccount:
 
-    def __init__(self, firebase_url, invoiceDate = None):
+    def __init__(self, firebase_url, invoice_date = None):
         self.Trading = Trading()
         self.firebase = firebase.FirebaseApplication(firebase_url, None)
 
-    def _parseGetAccount(self, response):
-        AccountEntries = response.dict()['AccountEntries']['AccountEntry']
+    def _parse_get_account(self, response):
+        account_entries = response.dict()['AccountEntries']['AccountEntry']
 
-        for i, AccountEntry in enumerate(AccountEntries):
-            print 'Sending account entry {0} to Firebase...'.format(AccountEntry.get('ItemID'))
+        for i, entry in enumerate(account_entries):
+            print 'Sending account entry {0} to Firebase...'.format(entry.get('ItemID'))
 
-            refNumber = AccountEntry['RefNumber']
-            # if refNumber is 0, it's not associated with an item
-            if refNumber == '0':
-                invoiceDate = response.dict()['AccountSummary']['InvoiceDate']
-                invoiceDate_regex = re.match('^([0-9]{4}-[0-9]{2}-[0-9]{2})T', invoiceDate)
-                if invoiceDate_regex:
-                    invoiceDate = invoiceDate_regex.group(1)
+            ref_number = entry['RefNumber']
+            # if ref_number is 0, it's not associated with an item
+            if ref_number == '0':
+                invoice_date = response.dict()['AccountSummary']['InvoiceDate']
+                invoice_date_regex = re.match('^([0-9]{4}-[0-9]{2}-[0-9]{2})T', invoice_date)
+                if invoice_date_regex:
+                    invoice_date = invoice_date_regex.group(1)
                 else:
-                    raise Exception('invoice Date %s does not match' % invoiceDate)
-                self.firebase.post('/fees/byInvoiceDate/%s' % invoiceDate, AccountEntry)
+                    raise Exception('invoice Date %s does not match' % invoice_date)
+                self.firebase.post('/fees/byInvoiceDate/%s' % invoice_date, entry)
             else:
-                self.firebase.put('/fees/byRefNumber', refNumber, AccountEntry)
+                self.firebase.put('/fees/byRefNumber', ref_number, entry)
 
-    def getInvoiceByInvoiceDate(self, invoiceDate):
+    def get_invoice_by_Date(self, invoice_date):
 
-        if not invoiceDate:
-            raise Exception('getInvoiceByInvoiceDate requires invoiceDate')
+        if not invoice_date:
+            raise Exception('get_invoice_by_invoice_Date requires invoice_date')
 
-        PageNumber = 1
-        NumExecutions = 1
+        page_number = 1
+        num_executions = 1
 
         while True:
-            print 'Getting account for date %s' % invoiceDate
+            print 'Getting account for date %s' % invoice_date
             try:
                 response = self.Trading.execute('GetAccount', {
                     'AccountHistorySelection': 'SpecifiedInvoice',
-                    'InvoiceDate': '%sT06:59:59.000Z' % invoiceDate,
-                    'Pagination': { 'EntriesPerPage': '1000', 'PageNumber': str(PageNumber) }
+                    'InvoiceDate': '%sT06:59:59.000Z' % invoice_date,
+                    'Pagination': { 'EntriesPerPage': '1000', 'PageNumber': str(page_number) }
                 })
 
                 # safety measure to make sure we dont have an infinite loop
-                NumExecutions += 1
-                if NumExecutions > 10:
+                num_executions += 1
+                if num_executions > 10:
                     break
 
-                self._parseGetAccount(response)
+                self._parse_get_account(response)
 
                 if 'HasMoreEntries' in response.dict():
                     if response.dict()['HasMoreEntries'] == "true":
-                        PageNumber += 1
+                        page_number += 1
                     else:
                         break
                 else:
@@ -76,5 +76,5 @@ if __name__ == "__main__":
     parser.add_argument('--invoice_date', help='invoice date', default='2016-02-29')
     args = parser.parse_args()
 
-    getAccount = GetAccount(args.firebase_url, invoiceDate=args.invoice_date)
-    getAccount.getInvoiceByInvoiceDate('2016-02-29')
+    getAccount = GetAccount(args.firebase_url, invoice_date=args.invoice_date)
+    getAccount.get_invoice_by_Date('2016-02-29')
