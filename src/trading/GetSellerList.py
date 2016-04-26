@@ -8,6 +8,7 @@ from ebaysdk.trading import Connection as Trading
 from firebase import firebase
 
 # GetSellerList gets all a seller's listings regardless of whether the item sold
+# new comment
 
 class GetSellerList:
     
