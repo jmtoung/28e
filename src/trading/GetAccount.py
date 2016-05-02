@@ -8,46 +8,75 @@ from ebaysdk.exception import ConnectionError
 from ebaysdk.trading import Connection as Trading
 from firebase import firebase
 
+AccountHistorySelection_types = ('BetweenSpecifiedDates', 'LastInvoice', 'SpecifiedInvoice')
 
-def _get_invoice_by_Date(firebase_url, invoice_date=None):
-    if not invoice_date:
-        raise Exception('get_invoice_by_invoice_Date requires invoice_date')
+def GetAccount(
+        AccountHistorySelection=None,
+        BeginDate=None,
+        EndDate=None,
+        InvoiceDate=None,
+        update_firebase=False,
+        firebase_url=None
+    ):
+    
+    options = {}
+    # make sure AccountHistorySelection is provided and is valid
+    if not (AccountHistorySelection and AccountHistorySelection in AccountHistorySelection_types):
+        raise Exception('--AccountHistorySelection is required; valid types are %s' % " ".join(AccountHistorySelection_types))
+    options['AccountHistorySelection'] = AccountHistorySelection
+    
+    if AccountHistorySelection=="BetweenSpecifiedDates":
+        if not (BeginDate and EndDate):
+            raise Exception('--BeginDate and --EndDate are required if --AccountHistorySelection is BetweenSpecifiedDates')
+        options['BeginDate'] = BeginDate
+        options['EndDate'] = EndDate
+    elif AccountHistorySelection=="SpecifiedInvoice":
+        if not InvoiceDate:
+            raise Exception('--InvoiceDate is required if --AccountHistorySelection is SpecifiedInvoice')
+        options['InvoiceDate'] = InvoiceDate
 
+    options['Pagination'] = { 'EntriesPerPage': '1000', 'PageNumber': 1 }
+    
+    if update_firebase:
+        if not firebase_url:
+            raise Exception('if --update_firebase set to True, --firebase_url is required')
+        
     trading = Trading()
-    fb = firebase.FirebaseApplication(firebase_url, None)
+    
+    fb = None
+    if update_firebase:
+        fb = firebase.FirebaseApplication(firebase_url, None)
+        
     page_number = 1
     num_executions = 1
-
+    
     while True:
-        print 'Getting account for date %s' % invoice_date
         try:
-            response = trading.execute('GetAccount', {
-                'AccountHistorySelection': 'SpecifiedInvoice',
-                'InvoiceDate': '%sT06:59:59.000Z' % invoice_date,
-                'Pagination': { 'EntriesPerPage': '1000', 'PageNumber': str(page_number) }
-            })
+            response = trading.execute('GetAccount', options)
 
             # safety measure to make sure we dont have an infinite loop
             num_executions += 1
             if num_executions > 10:
                 break
 
-            _parse_get_account(fb, response)
+            print 'PageNumber: %s' % options['Pagination']['PageNumber']
+            print json.dumps(response.dict(), sort_keys=True, indent=5)
+            
+            if update_firebase:
+                _add_account_entry_to_firebase(response, fb)
 
             has_more = response.dict().get('HasMoreEntries') == "true"
             if has_more:
-                page_number += 1
+                options['Pagination']['PageNumber'] += 1
             else:
                 break
 
         except ConnectionError as e:
             sys.stderr.write(json.dumps(e.response.dict()) + "\n")
 
-def _parse_get_account(fb, response):
-    account_entries = response.dict()['AccountEntries']['AccountEntry']
-
-    for entry in account_entries:
-        print 'Sending account entry {0} to Firebase...'.format(entry.get('ItemID'))
+def _add_account_entry_to_firebase(response, fb):
+    
+    for entry in response.dict()['AccountEntries']['AccountEntry']:
 
         ref_number = entry['RefNumber']
         # if ref_number is 0, it's not associated with an item
@@ -62,12 +91,17 @@ def _parse_get_account(fb, response):
         else:
             fb.put('/fees/byRefNumber', ref_number, entry)
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('--AccountHistorySelection', type=str, choices=AccountHistorySelection_types, default=AccountHistorySelection_types[1])
+    parser.add_argument('--InvoiceDate', type=str)
+    parser.add_argument('--update_firebase', action="store_true")
     parser.add_argument('--firebase_url', help='firebase url', default='https://theprofitlogger.firebaseio.com')
-    parser.add_argument('--invoice_date', help='invoice date', default='2016-02-29')
     args = parser.parse_args()
 
-    # what about args.invoice_date?
-    _get_invoice_by_Date(args.firebase_url, '2016-02-29')
+    GetAccount(
+        AccountHistorySelection=args.AccountHistorySelection,
+        InvoiceDate=args.InvoiceDate,
+        update_firebase=args.update_firebase,
+        firebase_url=args.firebase_url
+    )
