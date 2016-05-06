@@ -44,10 +44,11 @@ def GetAccount(
 
     trading = Trading()
     num_executions = 0
-    options['Pagination'] = { 'EntriesPerPage': '1000', 'PageNumber': 1 }
+    options['Pagination'] = { 'EntriesPerPage': '1000', 'PageNumber': 0 }
 
     while num_executions < 10:
         try:
+            options['Pagination']['PageNumber'] += 1
             response = trading.execute('GetAccount', options)
 
             # safety measure to make sure we dont have an infinite loop
@@ -60,9 +61,7 @@ def GetAccount(
                 _add_account_entry_to_firebase(response, fb)
 
             has_more = response.dict().get('HasMoreEntries') == "true"
-            if has_more:
-                options['Pagination']['PageNumber'] += 1
-            else:
+            if not has_more:
                 break
 
         except ConnectionError as e:
