@@ -46,7 +46,6 @@ def GetAccount(
     if update_firebase:
         fb = firebase.FirebaseApplication(firebase_url, None)
 
-    page_number = 1
     num_executions = 1
 
     while True:
