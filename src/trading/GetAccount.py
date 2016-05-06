@@ -21,7 +21,7 @@ def GetAccount(
 
     options = {}
     # make sure AccountHistorySelection is provided and is valid
-    if not (AccountHistorySelection and AccountHistorySelection in AccountHistorySelection_types):
+    if AccountHistorySelection not in AccountHistorySelection_types:
         raise Exception('--AccountHistorySelection is required; valid types are %s' % " ".join(AccountHistorySelection_types))
     options['AccountHistorySelection'] = AccountHistorySelection
 
