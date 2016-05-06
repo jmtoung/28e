@@ -50,31 +50,31 @@ def GetAccount(
     while has_more and num_executions < 10:
         try:
             options['Pagination']['PageNumber'] += 1
-            response = trading.execute('GetAccount', options)
+            response = trading.execute('GetAccount', options).dict()
 
             # safety measure to make sure we dont have an infinite loop
             num_executions += 1
 
             print 'PageNumber: %s' % options['Pagination']['PageNumber']
-            print json.dumps(response.dict(), sort_keys=True, indent=5)
+            print json.dumps(response, sort_keys=True, indent=5)
 
             if update_firebase:
                 _add_account_entry_to_firebase(response, fb)
 
-            has_more = response.dict().get('HasMoreEntries') == "true"
+            has_more = response.get('HasMoreEntries') == "true"
 
         except ConnectionError as e:
-            sys.stderr.write(json.dumps(e.response.dict()) + "\n")
+            sys.stderr.write(json.dumps(e.response) + "\n")
             break
 
 def _add_account_entry_to_firebase(response, fb):
 
-    for entry in response.dict()['AccountEntries']['AccountEntry']:
+    for entry in response['AccountEntries']['AccountEntry']:
 
         ref_number = entry['RefNumber']
         # if ref_number is 0, it's not associated with an item
         if ref_number == '0':
-            invoice_date = response.dict()['AccountSummary']['InvoiceDate']
+            invoice_date = response['AccountSummary']['InvoiceDate']
             invoice_date_regex = re.match('^([0-9]{4}-[0-9]{2}-[0-9]{2})T', invoice_date)
             if invoice_date_regex:
                 invoice_date = invoice_date_regex.group(1)
