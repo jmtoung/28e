@@ -3,88 +3,117 @@ import sys
 import json
 import argparse
 import datetime
+
 from ebaysdk.exception import ConnectionError
 from ebaysdk.trading import Connection as Trading
 from firebase import firebase
 
-# GetSellerList gets all a seller's listings regardless of whether the item sold
-# new comment
+GranularityLevel_types = ('Coarse', 'Fine', 'Medium')
 
-class GetSellerList:
+def GetSellerList(
+        EndTimeFrom=None,
+        EndTimeTo=None,
+        GranularityLevel=None,
+        IncludeVariations=False,
+        IncludeWatchCount=False,
+        StartTimeFrom=None,
+        StartTimeTo=None,
+        update_firebase=False,
+        firebase_url=None
+    ):
     
-    def __init__(self,
-                firebase_url
-                ):
-        
-        self.firebase_url = firebase_url
-        
-        self.Trading = Trading()
-        self.firebase = firebase.FirebaseApplication(self.firebase_url, None)
+    options = {}
     
-    def _parseGetAccount(self, response):
-        AccountEntries = response.dict()['AccountEntries']['AccountEntry']
+    if EndTimeFrom:
+        options['EndTimeFrom'] = EndTimeFrom
+    
+    if EndTimeTo:
+        options['EndTimeTo'] = EndTimeTo
+    
+    if GranularityLevel:
+        options['GranularityLevel'] = GranularityLevel
+    
+    if IncludeVariations:
+        options['IncludeVariations'] = str(IncludeVariations).lower()
+    
+    if IncludeWatchCount:
+        options['IncludeWatchCount'] = str(IncludeWatchCount).lower()
+    
+    if StartTimeFrom:
+        options['StartTimeFrom'] = StartTimeFrom
+    
+    if StartTimeTo:
+        options['StartTimeTo'] = StartTimeTo
+    
+    options['Pagination'] = { 'EntriesPerPage': '200', 'PageNumber': 1 }
+    
+    if update_firebase:
+        if not firebase_url:
+            raise Exception('if --update_firebase set to True, --firebase_url is required')
         
-        for i, AccountEntry in enumerate(AccountEntries):
-            refNumber = AccountEntry['RefNumber']
-            # if refNumber is 0, it's not associated with an item
-            if refNumber == '0':
-                invoiceDate = response.dict()['AccountSummary']['InvoiceDate']
-                invoiceDate_regex = re.match('^([0-9]{4}-[0-9]{2}-[0-9]{2})T', invoiceDate)
-                if invoiceDate_regex:
-                    invoiceDate = invoiceDate_regex.group(1)
-                else:
-                    raise Exception('invoice Date %s does not match' % invoiceDate)
-                self.firebase.post('/fees/byInvoiceDate/%s' % invoiceDate, AccountEntry)
+    trading = Trading()
+    
+    fb = None
+    if update_firebase:
+        fb = firebase.FirebaseApplication(firebase_url, None)
+        
+    page_number = 1
+    num_executions = 1
+    
+    while True:
+        try:
+            response = trading.execute('GetSellerList', options)
+
+            # safety measure to make sure we dont have an infinite loop
+            num_executions += 1
+            if num_executions > 10:
+                break
+
+            print 'PageNumber: %s' % options['Pagination']['PageNumber']
+            print json.dumps(response.dict(), sort_keys=True, indent=5)
+            
+            if update_firebase:
+                _add_item_to_firebase(response, fb)
+
+            has_more = response.dict().get('HasMoreEntries') == "true"
+            if has_more:
+                options['Pagination']['PageNumber'] += 1
             else:
-                self.firebase.put('/fees/byRefNumber', refNumber, AccountEntry)
+                break
+
+        except ConnectionError as e:
+            sys.stderr.write(json.dumps(e.response.dict()) + "\n")
+            break
+
+def _add_item_to_firebase(response, fb):
+    
+    for item in response.dict()['ItemArray']['Item']:
+
+        itemID = item['ItemID']
         
-    def getSellerList(self):
-                
-        PageNumber = 1
-        NumExecutions = 1
-        
-        while True:
-            try: 
-                response = self.Trading.execute('GetSellerList', {
-                    'EndTimeTo': '2016-04-20',
-                    'EndTimeFrom': '2016-03-30',
-                    'GranularityLevel': 'Coarse',
-                    'Pagination': {'PageNumber' : str(PageNumber)}})
-                print str(PageNumber)
-                # safety measure to make sure we dont have an infinite loop
-                NumExecutions += 1
-                if NumExecutions > 10:
-                    break
-                        
-                for i, item in enumerate(response.dict()['ItemArray']['Item']):
-                    #print i, "\t", json.dumps(item)
-                    isSold = 'X'
-                    if 'HighBidder' in item['SellingStatus']:
-                        isSold='*'
-                        print i, "\t", isSold, "\t", item['ListingDetails']['EndTime'], "\t", item['Title'], "\t", item
-                
-                test = response.dict()
-                test['ItemArray'] = None
-                print json.dumps(test)
-                
-                if 'HasMoreEntries' in response.dict():
-                    if response.dict()['HasMoreEntries'] == "true":
-                        PageNumber += 1
-                    else:
-                        break    
-                else:
-                    break
-                
-            except ConnectionError as e:
-                sys.stderr.write(json.dumps(e.response.dict()) + "\n")
-                raise Exception
+        fb.put('/items', itemID, item)
 
 if __name__ == "__main__":
-    
     parser = argparse.ArgumentParser()
+    parser.add_argument('--EndTimeFrom', type=str)
+    parser.add_argument('--EndTimeTo', type=str)
+    parser.add_argument('--GranularityLevel', type=str, choices=GranularityLevel_types)
+    parser.add_argument('--IncludeVariations', action="store_true")
+    parser.add_argument('--IncludeWatchCount', action="store_true")
+    parser.add_argument('--StartTimeFrom', type=str)
+    parser.add_argument('--StartTimeTo', type=str)
+    parser.add_argument('--update_firebase', action="store_true")
     parser.add_argument('--firebase_url', help='firebase url', default='https://theprofitlogger.firebaseio.com')
-    
     args = parser.parse_args()
-    
-    getSellerList = GetSellerList(args.firebase_url)
-    getSellerList.getSellerList()
+
+    sys.exit(GetSellerList(
+        EndTimeFrom=args.EndTimeFrom,
+        EndTimeTo=args.EndTimeTo,
+        GranularityLevel=args.GranularityLevel,
+        IncludeVariations=args.IncludeVariations,
+        IncludeWatchCount=args.IncludeWatchCount,
+        StartTimeFrom=args.StartTimeFrom,
+        StartTimeTo=args.StartTimeTo,
+        update_firebase=args.update_firebase,
+        firebase_url=args.firebase_url
+    ))
