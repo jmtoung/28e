@@ -73,6 +73,7 @@ def GetAccount(
 
         except ConnectionError as e:
             sys.stderr.write(json.dumps(e.response.dict()) + "\n")
+            break
 
 def _add_account_entry_to_firebase(response, fb):
     
@@ -99,9 +100,9 @@ if __name__ == "__main__":
     parser.add_argument('--firebase_url', help='firebase url', default='https://theprofitlogger.firebaseio.com')
     args = parser.parse_args()
 
-    GetAccount(
+    sys.exit(GetAccount(
         AccountHistorySelection=args.AccountHistorySelection,
         InvoiceDate=args.InvoiceDate,
         update_firebase=args.update_firebase,
         firebase_url=args.firebase_url
-    )
+    ))
