@@ -18,13 +18,13 @@ def GetAccount(
         update_firebase=False,
         firebase_url=None
     ):
-    
+
     options = {}
     # make sure AccountHistorySelection is provided and is valid
     if not (AccountHistorySelection and AccountHistorySelection in AccountHistorySelection_types):
         raise Exception('--AccountHistorySelection is required; valid types are %s' % " ".join(AccountHistorySelection_types))
     options['AccountHistorySelection'] = AccountHistorySelection
-    
+
     if AccountHistorySelection=="BetweenSpecifiedDates":
         if not (BeginDate and EndDate):
             raise Exception('--BeginDate and --EndDate are required if --AccountHistorySelection is BetweenSpecifiedDates')
@@ -36,20 +36,20 @@ def GetAccount(
         options['InvoiceDate'] = InvoiceDate
 
     options['Pagination'] = { 'EntriesPerPage': '1000', 'PageNumber': 1 }
-    
+
     if update_firebase:
         if not firebase_url:
             raise Exception('if --update_firebase set to True, --firebase_url is required')
-        
+
     trading = Trading()
-    
+
     fb = None
     if update_firebase:
         fb = firebase.FirebaseApplication(firebase_url, None)
-        
+
     page_number = 1
     num_executions = 1
-    
+
     while True:
         try:
             response = trading.execute('GetAccount', options)
@@ -61,7 +61,7 @@ def GetAccount(
 
             print 'PageNumber: %s' % options['Pagination']['PageNumber']
             print json.dumps(response.dict(), sort_keys=True, indent=5)
-            
+
             if update_firebase:
                 _add_account_entry_to_firebase(response, fb)
 
@@ -76,7 +76,7 @@ def GetAccount(
             break
 
 def _add_account_entry_to_firebase(response, fb):
-    
+
     for entry in response.dict()['AccountEntries']['AccountEntry']:
 
         ref_number = entry['RefNumber']
