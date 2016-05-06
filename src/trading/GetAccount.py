@@ -37,9 +37,8 @@ def GetAccount(
 
     options['Pagination'] = { 'EntriesPerPage': '1000', 'PageNumber': 1 }
 
-    if update_firebase:
-        if not firebase_url:
-            raise Exception('if --update_firebase set to True, --firebase_url is required')
+    if update_firebase and not firebase_url:
+        raise Exception('if --update_firebase set to True, --firebase_url is required')
 
     trading = Trading()
 
