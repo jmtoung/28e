@@ -46,16 +46,14 @@ def GetAccount(
     if update_firebase:
         fb = firebase.FirebaseApplication(firebase_url, None)
 
-    num_executions = 1
+    num_executions = 0
 
-    while True:
+    while num_executions < 10:
         try:
             response = trading.execute('GetAccount', options)
 
             # safety measure to make sure we dont have an infinite loop
             num_executions += 1
-            if num_executions > 10:
-                break
 
             print 'PageNumber: %s' % options['Pagination']['PageNumber']
             print json.dumps(response.dict(), sort_keys=True, indent=5)
