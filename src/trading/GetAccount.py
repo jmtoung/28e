@@ -35,18 +35,16 @@ def GetAccount(
             raise Exception('--InvoiceDate is required if --AccountHistorySelection is SpecifiedInvoice')
         options['InvoiceDate'] = InvoiceDate
 
-    options['Pagination'] = { 'EntriesPerPage': '1000', 'PageNumber': 1 }
-
     if update_firebase and not firebase_url:
         raise Exception('if --update_firebase set to True, --firebase_url is required')
-
-    trading = Trading()
 
     fb = None
     if update_firebase:
         fb = firebase.FirebaseApplication(firebase_url, None)
 
+    trading = Trading()
     num_executions = 0
+    options['Pagination'] = { 'EntriesPerPage': '1000', 'PageNumber': 1 }
 
     while num_executions < 10:
         try:
