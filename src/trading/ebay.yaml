@@ -12,7 +12,7 @@ api.sandbox.ebay.com:
 
 # Trading API - https://www.x.com/developers/ebay/products/trading-api
 api.ebay.com:
-    version: 719
+    version: 963
     appid: Jonathan-test-PRD-b2f8dabd4-4097f143
     certid: PRD-2f8dabd4ac83-5e47-4988-bf56-579a
     devid: a2b89781-8b46-4636-a255-234f161c9a10
