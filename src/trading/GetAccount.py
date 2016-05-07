@@ -53,7 +53,7 @@ def GetAccount(
         try:
             response = trading.execute('GetAccount', options).dict()
         except ConnectionError as e:
-            sys.stderr.write(json.dumps(e.response) + "\n")
+            sys.stderr.write(json.dumps(e.response.dict()) + "\n")
             break
 
         # safety measure to make sure we dont have an infinite loop
