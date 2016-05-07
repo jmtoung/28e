@@ -45,49 +45,41 @@ def GetSellerList(
     if StartTimeTo:
         options['StartTimeTo'] = StartTimeTo
     
-    options['Pagination'] = { 'EntriesPerPage': '200', 'PageNumber': 1 }
-    
-    if update_firebase:
-        if not firebase_url:
-            raise Exception('if --update_firebase set to True, --firebase_url is required')
+    if update_firebase and not firebase_url:
+        raise Exception('if --update_firebase set to True, --firebase_url is required')
         
-    trading = Trading()
-    
     fb = None
     if update_firebase:
         fb = firebase.FirebaseApplication(firebase_url, None)
         
-    page_number = 1
-    num_executions = 1
+    trading = Trading()        
+    num_executions = 0
+    options['Pagination'] = { 'EntriesPerPage': '200', 'PageNumber': 0 }
+    has_more = True
     
-    while True:
+    while has_more and num_executions < 10:
+        options['Pagination']['PageNumber'] += 1
+        
         try:
-            response = trading.execute('GetSellerList', options)
-
-            # safety measure to make sure we dont have an infinite loop
-            num_executions += 1
-            if num_executions > 10:
-                break
-
-            print 'PageNumber: %s' % options['Pagination']['PageNumber']
-            print json.dumps(response.dict(), sort_keys=True, indent=5)
-            
-            if update_firebase:
-                _add_item_to_firebase(response, fb)
-
-            has_more = response.dict().get('HasMoreEntries') == "true"
-            if has_more:
-                options['Pagination']['PageNumber'] += 1
-            else:
-                break
-
+            response = trading.execute('GetSellerList', options).dict()
         except ConnectionError as e:
             sys.stderr.write(json.dumps(e.response.dict()) + "\n")
             break
 
+        # safety measure to make sure we dont have an infinite loop
+        num_executions += 1
+
+        print 'PageNumber: %s' % options['Pagination']['PageNumber']
+        print json.dumps(response, sort_keys=True, indent=5)
+
+        if update_firebase:
+            _add_item_to_firebase(response, fb)
+
+        has_more = response.get('HasMoreEntries') == "true"
+
 def _add_item_to_firebase(response, fb):
     
-    for item in response.dict()['ItemArray']['Item']:
+    for item in response['ItemArray']['Item']:
 
         itemID = item['ItemID']
         
