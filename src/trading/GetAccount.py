@@ -48,24 +48,24 @@ def GetAccount(
     has_more = True
 
     while has_more and num_executions < 10:
+        options['Pagination']['PageNumber'] += 1
+        
         try:
-            options['Pagination']['PageNumber'] += 1
             response = trading.execute('GetAccount', options).dict()
-
-            # safety measure to make sure we dont have an infinite loop
-            num_executions += 1
-
-            print 'PageNumber: %s' % options['Pagination']['PageNumber']
-            print json.dumps(response, sort_keys=True, indent=5)
-
-            if update_firebase:
-                _add_account_entry_to_firebase(response, fb)
-
-            has_more = response.get('HasMoreEntries') == "true"
-
         except ConnectionError as e:
             sys.stderr.write(json.dumps(e.response) + "\n")
             break
+
+        # safety measure to make sure we dont have an infinite loop
+        num_executions += 1
+
+        print 'PageNumber: %s' % options['Pagination']['PageNumber']
+        print json.dumps(response, sort_keys=True, indent=5)
+
+        if update_firebase:
+            _add_account_entry_to_firebase(response, fb)
+
+        has_more = response.get('HasMoreEntries') == "true"
 
 def _add_account_entry_to_firebase(response, fb):
 
