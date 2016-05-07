@@ -80,7 +80,7 @@ def GetOrders(
 
 def _add_order_to_firebase(response, fb):
     
-    for order in response.dict()['OrderArray']['Order']:
+    for order in response['OrderArray']['Order']:
         OrderID = order['OrderID']
         
         fb.put('/orders', OrderID, order)
