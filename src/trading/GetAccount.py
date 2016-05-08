@@ -53,7 +53,7 @@ def GetAccount(
         try:
             response = trading.execute('GetAccount', options).dict()
         except ConnectionError as e:
-            sys.stderr.write(json.dumps(e.response.dict()) + "\n")
+            raise Exception(json.dumps(e.response.dict(), sort_keys=True, indent=5))
             break
 
         # safety measure to make sure we dont have an infinite loop
@@ -87,6 +87,8 @@ def _add_account_entry_to_firebase(response, fb):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--AccountHistorySelection', type=str, choices=AccountHistorySelection_types, default=AccountHistorySelection_types[1])
+    parser.add_argument('--BeginDate', type=str)
+    parser.add_argument('--EndDate', type=str)
     parser.add_argument('--InvoiceDate', type=str)
     parser.add_argument('--update_firebase', action="store_true")
     parser.add_argument('--firebase_url', help='firebase url', default='https://theprofitlogger.firebaseio.com')
@@ -94,6 +96,8 @@ if __name__ == "__main__":
 
     sys.exit(GetAccount(
         AccountHistorySelection=args.AccountHistorySelection,
+        BeginDate=args.BeginDate,
+        EndDate=args.EndDate,
         InvoiceDate=args.InvoiceDate,
         update_firebase=args.update_firebase,
         firebase_url=args.firebase_url
