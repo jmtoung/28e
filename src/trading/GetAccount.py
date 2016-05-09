@@ -33,11 +33,10 @@ def GetAccount(
         options['InvoiceDate'] = InvoiceDate
 
     trading = Trading()
-    num_executions = 0
     options['Pagination'] = { 'EntriesPerPage': '2000', 'PageNumber': 0 }
     has_more = True
 
-    while has_more and num_executions < 10:
+    while has_more:
         options['Pagination']['PageNumber'] += 1
         
         try:
@@ -46,9 +45,6 @@ def GetAccount(
             raise Exception('ConnectionError:\n%s ' % json.dumps(e.response.dict(), sort_keys=True, indent=5))
         else:
             yield response
-
-        # safety measure to make sure we dont have an infinite loop
-        num_executions += 1
 
         has_more = response.dict().get('HasMoreEntries') == "true"
 
