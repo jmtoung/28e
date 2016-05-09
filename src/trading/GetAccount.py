@@ -34,25 +34,23 @@ def GetAccount(
 
     trading = Trading()
     num_executions = 0
-    options['Pagination'] = { 'EntriesPerPage': '1000', 'PageNumber': 0 }
+    options['Pagination'] = { 'EntriesPerPage': '2000', 'PageNumber': 0 }
     has_more = True
 
     while has_more and num_executions < 10:
         options['Pagination']['PageNumber'] += 1
         
         try:
-            response = trading.execute('GetAccount', options).dict()
+            response = trading.execute('GetAccount', options)
         except ConnectionError as e:
-            raise Exception(json.dumps(e.response.dict(), sort_keys=True, indent=5))
-            break
+            raise Exception('ConnectionError:\n%s ' % json.dumps(e.response.dict(), sort_keys=True, indent=5))
+        else:
+            yield response
 
         # safety measure to make sure we dont have an infinite loop
         num_executions += 1
 
-        print 'PageNumber: %s' % options['Pagination']['PageNumber']
-        print json.dumps(response, sort_keys=True, indent=5)
-
-        has_more = response.get('HasMoreEntries') == "true"
+        has_more = response.dict().get('HasMoreEntries') == "true"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
