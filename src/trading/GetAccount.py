@@ -35,13 +35,6 @@ def GetAccount(
             raise Exception('--InvoiceDate is required if --AccountHistorySelection is SpecifiedInvoice')
         options['InvoiceDate'] = InvoiceDate
 
-    if update_firebase and not firebase_url:
-        raise Exception('if --update_firebase set to True, --firebase_url is required')
-
-    fb = None
-    if update_firebase:
-        fb = firebase.FirebaseApplication(firebase_url, None)
-
     trading = Trading()
     num_executions = 0
     options['Pagination'] = { 'EntriesPerPage': '1000', 'PageNumber': 0 }
@@ -62,43 +55,19 @@ def GetAccount(
         print 'PageNumber: %s' % options['Pagination']['PageNumber']
         print json.dumps(response, sort_keys=True, indent=5)
 
-        if update_firebase:
-            _add_account_entry_to_firebase(response, fb)
-
         has_more = response.get('HasMoreEntries') == "true"
-
-def _add_account_entry_to_firebase(response, fb):
-
-    for entry in response['AccountEntries']['AccountEntry']:
-
-        ref_number = entry['RefNumber']
-        # if ref_number is 0, it's not associated with an item
-        if ref_number == '0':
-            invoice_date = response['AccountSummary']['InvoiceDate']
-            invoice_date_regex = re.match('^([0-9]{4}-[0-9]{2}-[0-9]{2})T', invoice_date)
-            if invoice_date_regex:
-                invoice_date = invoice_date_regex.group(1)
-            else:
-                raise Exception('invoice Date %s does not match' % invoice_date)
-            fb.post('/fees/byInvoiceDate/%s' % invoice_date, entry)
-        else:
-            fb.put('/fees/byRefNumber', ref_number, entry)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--AccountHistorySelection', type=str, choices=AccountHistorySelection_types, default=AccountHistorySelection_types[1])
+    parser.add_argument('--AccountHistorySelection', type=str, choices=AccountHistorySelection_types)
     parser.add_argument('--BeginDate', type=str)
     parser.add_argument('--EndDate', type=str)
     parser.add_argument('--InvoiceDate', type=str)
-    parser.add_argument('--update_firebase', action="store_true")
-    parser.add_argument('--firebase_url', help='firebase url', default='https://theprofitlogger.firebaseio.com')
     args = parser.parse_args()
 
     sys.exit(GetAccount(
         AccountHistorySelection=args.AccountHistorySelection,
         BeginDate=args.BeginDate,
         EndDate=args.EndDate,
-        InvoiceDate=args.InvoiceDate,
-        update_firebase=args.update_firebase,
-        firebase_url=args.firebase_url
+        InvoiceDate=args.InvoiceDate
     ))
