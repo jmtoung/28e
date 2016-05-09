@@ -6,7 +6,6 @@ import datetime
 
 from ebaysdk.exception import ConnectionError
 from ebaysdk.trading import Connection as Trading
-from firebase import firebase
 
 AccountHistorySelection_types = ('BetweenSpecifiedDates', 'LastInvoice', 'SpecifiedInvoice')
 
@@ -14,9 +13,7 @@ def GetAccount(
         AccountHistorySelection=None,
         BeginDate=None,
         EndDate=None,
-        InvoiceDate=None,
-        update_firebase=False,
-        firebase_url=None
+        InvoiceDate=None
     ):
 
     options = {}
