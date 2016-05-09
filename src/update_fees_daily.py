@@ -18,7 +18,7 @@ if response:
     BeginDate = response
 # if response is None, that means we haven't run this script before
 else:
-    BeginDate = EndDate - timedelta(days=10)
+    BeginDate = EndDate - timedelta(days=4*28)
     BeginDate = BeginDate.isoformat() + 'Z'
     # clear fees in case they exist
     firebase.delete('/', 'fees')
