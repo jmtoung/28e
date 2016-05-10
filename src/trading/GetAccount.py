@@ -42,7 +42,7 @@ def GetAccount(
         try:
             response = trading.execute('GetAccount', options)
         except ConnectionError as e:
-            raise Exception('ConnectionError:\n%s ' % json.dumps(e.response.dict(), sort_keys=True, indent=5))
+            raise Exception('ConnectionError:\n%s' % json.dumps(e.response.dict(), sort_keys=True, indent=5))
         else:
             yield response
 
