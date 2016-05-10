@@ -51,13 +51,11 @@ def GetOrders(
         options['Pagination']['PageNumber'] += 1
         
         try:
-            response = trading.execute('GetOrders', options).dict()
+            response = trading.execute('GetOrders', options)
         except ConnectionError as e:
-            sys.stderr.write(json.dumps(e.response.dict()) + "\n")
-            break
-
-        print 'PageNumber: %s' % options['Pagination']['PageNumber']
-        print json.dumps(response, sort_keys=True, indent=5)
+            raise Exception('ConnectionError:\n%s' % json.dumps(e.response.dict(), sort_keys=True, indent=5))
+        else:
+            yield response
 
         has_more = response.get('HasMoreEntries') == "true"
 
