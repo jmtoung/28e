@@ -21,11 +21,12 @@ def GetOrders(
     ):
 
     options = {}
+    
     if CreateTimeFrom:
         options['CreateTimeFrom'] = CreateTimeFrom
     if CreateTimeTo:
         options['CreateTimeTo'] = CreateTimeTo
-    
+
     if IncludeFinalValueFee:
         options['IncludeFinalValueFee'] = str(IncludeFinalValueFee).lower()
     
@@ -42,11 +43,11 @@ def GetOrders(
     
     if DetailLevel:
         options['DetailLevel'] = DetailLevel
-                    
+    
     trading = Trading()
     options['Pagination'] = { 'EntriesPerPage': '1000', 'PageNumber': 0 }
     has_more = True
-    
+
     while has_more:
         options['Pagination']['PageNumber'] += 1
         
@@ -56,7 +57,7 @@ def GetOrders(
             raise Exception('ConnectionError:\n%s' % json.dumps(e.response.dict(), sort_keys=True, indent=5))
         else:
             yield response
-
+        
         has_more = response.get('HasMoreEntries') == "true"
 
 if __name__ == "__main__":
