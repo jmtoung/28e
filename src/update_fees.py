@@ -51,7 +51,7 @@ try:
                     firebase.put('/fees/byRefNumber', entry['RefNumber'], entry)
                 
 except Exception as e:
-    print 'Exception was raised: %s' % e
+    raise
 else:
     print('successfully retrieved')
     
