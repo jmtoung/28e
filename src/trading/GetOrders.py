@@ -58,7 +58,7 @@ def GetOrders(
         else:
             yield response
         
-        has_more = response.get('HasMoreEntries') == "true"
+        has_more = response.dict().get('HasMoreEntries') == "true"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
