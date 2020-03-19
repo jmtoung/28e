@@ -17,7 +17,7 @@ if response:
     print 'Last time we updated orders was %s' % response
     response = datetime.strptime(response, "%Y-%m-%dT%H:%M:%S.%fZ")
     time_since_last_run = Now - response
-    NumberOfDays = time_since_last_run.days
+    NumberOfDays = min(30, time_since_last_run.days)
 # if response is None, that means we haven't run this script before
 else:
     NumberOfDays = 30

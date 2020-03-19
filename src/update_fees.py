@@ -4,7 +4,7 @@ from trading.GetAccount import GetAccount
 from firebase import firebase
 
 # initialize firebase 
-firebase_url = 'https://theprofitlogger.firebaseio.com'
+firebase_url = 'https://profitlogger-1314.firebaseio.com'
 firebase = firebase.FirebaseApplication(firebase_url, None)
 
 # get the last time we ran this script
